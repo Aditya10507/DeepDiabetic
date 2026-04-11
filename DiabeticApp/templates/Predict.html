@@ -1,0 +1,87 @@
+{% load static %}
+<html>
+<head>
+<title>Predict Disease</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<link rel="stylesheet" type="text/css" href="{% static 'style.css' %}?v=20260410b"/>
+</head>
+<body class="app-body">
+<div class="app-backdrop">
+	<div class="app-backdrop-orb app-backdrop-orb-a"></div>
+	<div class="app-backdrop-orb app-backdrop-orb-b"></div>
+</div>
+<div class="app-shell">
+	<div class="app-topbar">
+		<div>
+			<p class="eyebrow eyebrow-dark">Retina Screening</p>
+			<h1>{{ welcome_title }}</h1>
+			<p class="app-subtitle">{{ welcome_text }}</p>
+		</div>
+		<a class="secondary-button" href="{% url 'LogoutUser' %}">Logout</a>
+	</div>
+	<div class="app-nav">
+		<a href="{% url 'Dashboard' %}">Dashboard</a>
+		<a href="{% url 'LoadDatasetAction' %}">Load Dataset</a>
+		<a href="{% url 'ProcessData' %}">Processed Data</a>
+		<a href="{% url 'RunML' %}">Run Algorithms</a>
+		<a href="{% url 'Predict' %}">Predict Disease</a>
+	</div>
+	<div class="page-shell">
+		<div class="hero-panel">
+			<div class="hero-copy">
+				<p class="eyebrow">Prediction Panel</p>
+				<h2>Upload a fundus image for classification</h2>
+				<p class="hero-text">The system preprocesses the image, loads the available model, and returns the most likely disease category with a confidence score and a recommendation note.</p>
+			</div>
+			<div class="hero-notes">
+				<div class="note-chip">Login required for prediction access</div>
+				<div class="note-chip">Current supported classes: Cataract, DME, DR, Glaucoma</div>
+			</div>
+		</div>
+		<form class="upload-card" method="post" action="{% url 'PredictAction' %}" enctype="multipart/form-data">
+			{% csrf_token %}
+			{% if data %}
+			<div class="alert-box">{{ data|safe }}</div>
+			{% endif %}
+			<label class="field-label" for="retina-image">Upload retina image</label>
+			<input id="retina-image" class="file-input" type="file" name="t1" accept="image/*" required />
+			<p class="field-help">Use a clear retina image. After upload, the system will continue to the result screen automatically.</p>
+			<button class="primary-button" type="submit">Run Prediction</button>
+		</form>
+	</div>
+</div>
+<div class="scroll-ui">
+	<div class="scroll-track"><div class="scroll-thumb" id="scrollThumb"></div></div>
+	<button class="scroll-step" id="scrollDownButton" type="button" aria-label="Scroll down">↓</button>
+	<button class="scroll-top" id="scrollTopButton" type="button" aria-label="Scroll to top">↑</button>
+</div>
+<script>
+(function() {
+	const thumb = document.getElementById('scrollThumb');
+	const button = document.getElementById('scrollTopButton');
+	const downButton = document.getElementById('scrollDownButton');
+	function updateScroller() {
+		const scrollTop = window.scrollY || document.documentElement.scrollTop;
+		const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+		const ratio = scrollHeight > 0 ? scrollTop / scrollHeight : 0;
+		thumb.style.transform = 'translateY(' + (ratio * 132) + 'px)';
+		button.classList.toggle('visible', scrollTop > 180);
+		downButton.classList.toggle('hidden', scrollTop > scrollHeight - 220);
+	}
+	button.addEventListener('click', function() {
+		window.scrollTo({ top: 0, behavior: 'smooth' });
+	});
+	downButton.addEventListener('click', function() {
+		window.scrollBy({ top: window.innerHeight * 0.85, behavior: 'smooth' });
+	});
+	window.addEventListener('scroll', updateScroller, { passive: true });
+	window.addEventListener('load', updateScroller);
+	updateScroller();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+{% load static %}
+<html>
+<head>
+<title>Login</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<link rel="stylesheet" type="text/css" href="{% static 'style.css' %}?v=20260410d"/>
+</head>
+<body class="auth-body">
+<div class="auth-backdrop">
+	<div class="auth-backdrop-orb auth-backdrop-orb-a"></div>
+	<div class="auth-backdrop-orb auth-backdrop-orb-b"></div>
+	<div class="auth-starfield"></div>
+</div>
+<div class="auth-shell">
+	<div class="auth-visual auth-cosmic-visual">
+		<div class="auth-cosmic-orbit auth-cosmic-orbit-a"></div>
+		<div class="auth-cosmic-orbit auth-cosmic-orbit-b"></div>
+		<div class="auth-cosmic-iris">
+			<div class="auth-cosmic-iris-core"></div>
+			<div class="auth-cosmic-pupil"></div>
+			<div class="auth-cosmic-glint"></div>
+		</div>
+		<h2>Login and continue to the retinal analysis dashboard</h2>
+		<p>Use the email and password from your created account to continue to disease screening.</p>
+		<a class="text-link" href="{% url 'Register' %}">Need an account? Signup</a>
+	</div>
+	<div class="auth-card">
+		<p class="eyebrow">{{ form_mode }}</p>
+		<h1>{{ title }}</h1>
+		<p class="auth-subtitle">{{ subtitle }}</p>
+		<form method="post" action="{% url 'UserLoginAction' %}" class="auth-form">
+			{% csrf_token %}
+			{% if form.non_field_errors %}
+			<div class="alert-box">
+				{% for error in form.non_field_errors %}{{ error }}{% endfor %}
+			</div>
+			{% endif %}
+			<div class="field-group">
+				<label for="id_email">Email</label>
+				{{ form.email }}
+				{% for error in form.email.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+			</div>
+			<div class="field-group">
+				<label for="id_password">Password</label>
+				{{ form.password }}
+				{% for error in form.password.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+			</div>
+			<button class="primary-button full-width" type="submit">Login</button>
+		</form>
+	</div>
+</div>
+<div class="scroll-ui">
+	<div class="scroll-track"><div class="scroll-thumb" id="scrollThumb"></div></div>
+	<button class="scroll-step" id="scrollDownButton" type="button" aria-label="Scroll down">&#8595;</button>
+	<button class="scroll-top" id="scrollTopButton" type="button" aria-label="Scroll to top">&#8593;</button>
+</div>
+<script>
+(function() {
+	const thumb = document.getElementById('scrollThumb');
+	const button = document.getElementById('scrollTopButton');
+	const downButton = document.getElementById('scrollDownButton');
+	function updateScroller() {
+		const scrollTop = window.scrollY || document.documentElement.scrollTop;
+		const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+		const ratio = scrollHeight > 0 ? scrollTop / scrollHeight : 0;
+		thumb.style.transform = 'translateY(' + (ratio * 132) + 'px)';
+		button.classList.toggle('visible', scrollTop > 180);
+		downButton.classList.toggle('hidden', scrollTop > scrollHeight - 220);
+	}
+	button.addEventListener('click', function() {
+		window.scrollTo({ top: 0, behavior: 'smooth' });
+	});
+	downButton.addEventListener('click', function() {
+		window.scrollBy({ top: window.innerHeight * 0.85, behavior: 'smooth' });
+	});
+	window.addEventListener('scroll', updateScroller, { passive: true });
+	window.addEventListener('load', updateScroller);
+	updateScroller();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+{% load static %}
+<html>
+<head>
+<title>DeepDiabetic</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<link rel="stylesheet" type="text/css" href="{% static 'style.css' %}?v=20260410c"/>
+</head>
+<body class="landing-body cosmic-body">
+<div class="cosmic-stage">
+	<div class="star-layer star-layer-a"></div>
+	<div class="star-layer star-layer-b"></div>
+	<div class="nebula-glow nebula-glow-a"></div>
+	<div class="nebula-glow nebula-glow-b"></div>
+	<div class="dust-trails"></div>
+	<div class="iris-ring-outer"></div>
+	<div class="iris-ring-middle"></div>
+	<div class="iris-ring-inner"></div>
+	<div class="cosmic-eye" id="cosmicEye">
+		<div class="cosmic-sclera">
+			<div class="cosmic-iris">
+				<div class="iris-stars"></div>
+				<div class="iris-stars iris-stars-secondary"></div>
+				<div class="iris-clouds"></div>
+				<div class="iris-veins"></div>
+				<div class="iris-rays"></div>
+				<div class="cosmic-pupil"></div>
+				<div class="iris-glow"></div>
+				<div class="iris-glint-large"></div>
+				<div class="iris-glint-small"></div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<main class="landing-page cosmic-landing">
+	<div class="landing-copy cosmic-copy">
+		<p class="eyebrow eyebrow-dark">DeepDiabetic Screening</p>
+		<h1>See retinal disease risk through a cinematic screening experience</h1>
+		<p class="landing-text">Sign in or create your account to continue into the retinal disease workflow. The landing view now stays closer to the reference you shared with a luminous space-iris background and a calmer premium look.</p>
+		<div class="landing-actions">
+			<a class="hero-button hero-primary" href="{% url 'UserLogin' %}">Login</a>
+			<a class="hero-button hero-secondary" href="{% url 'Register' %}">Signup</a>
+		</div>
+		<div class="landing-stats">
+			<div class="landing-stat"><strong>4</strong><span>Disease classes</span></div>
+			<div class="landing-stat"><strong>Secure</strong><span>Email account access</span></div>
+			<div class="landing-stat"><strong>AI</strong><span>Retina screening workflow</span></div>
+		</div>
+	</div>
+</main>
+
+<section class="landing-section cosmic-section">
+	<div class="landing-section-card cosmic-panel">
+		<p class="eyebrow">Why This Flow</p>
+		<h2>Scroll deeper into the eye-guided screening journey</h2>
+		<div class="landing-feature-grid">
+			<div class="landing-feature">
+				<h3>Immersive entry</h3>
+				<p>A darker, high-contrast landing scene makes the platform feel like a vision-tech product rather than a plain HTML portal.</p>
+			</div>
+			<div class="landing-feature">
+				<h3>Real account workflow</h3>
+				<p>Users register with their details, login with email, and continue into protected retinal disease screens.</p>
+			</div>
+			<div class="landing-feature">
+				<h3>Prediction continuity</h3>
+				<p>From signup to upload, the experience stays cohesive, atmospheric, and focused on eye-disease analysis.</p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<div class="scroll-ui">
+	<div class="scroll-track"><div class="scroll-thumb" id="scrollThumb"></div></div>
+	<button class="scroll-step" id="scrollDownButton" type="button" aria-label="Scroll down">&#8595;</button>
+	<button class="scroll-top" id="scrollTopButton" type="button" aria-label="Scroll to top">&#8593;</button>
+</div>
+
+<script>
+(function() {
+	const thumb = document.getElementById('scrollThumb');
+	const topButton = document.getElementById('scrollTopButton');
+	const downButton = document.getElementById('scrollDownButton');
+
+	function updateScroller() {
+		const scrollTop = window.scrollY || document.documentElement.scrollTop;
+		const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+		const ratio = scrollHeight > 0 ? scrollTop / scrollHeight : 0;
+		thumb.style.transform = 'translateY(' + (ratio * 132) + 'px)';
+		topButton.classList.toggle('visible', scrollTop > 180);
+		downButton.classList.toggle('hidden', scrollTop > scrollHeight - 220);
+	}
+
+	topButton.addEventListener('click', function() {
+		window.scrollTo({ top: 0, behavior: 'smooth' });
+	});
+
+	downButton.addEventListener('click', function() {
+		window.scrollBy({ top: window.innerHeight * 0.88, behavior: 'smooth' });
+	});
+
+	window.addEventListener('scroll', updateScroller, { passive: true });
+	window.addEventListener('load', function() {
+		updateScroller();
+	});
+	updateScroller();
+})();
+</script>
+</body>
+</html>

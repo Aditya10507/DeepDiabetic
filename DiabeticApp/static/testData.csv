@@ -1,0 +1,12 @@
+Unnamed: 0,mutation_date,disposition_number,mutation_nature,local_type,number_of_main_rooms,number_of_lots,actual_built_surface,land_surface,crop_nature,municipality_name,longitude,latitude
+2000162,2020-05-05,1,Vente,Maison,4.0,0,88.0,2118.0,sols,La Farlède,6.049481,43.158048
+449388,2020-03-06,1,Vente,Maison,8.0,0,172.0,800.0,sols,Boulazac Isle Manoire,0.760269,45.173036
+388184,2020-05-12,1,Vente,Maison,6.0,0,100.0,581.0,sols,Bressey-sur-Tille,5.182307,47.306395
+1126182,2020-10-14,1,Vente,Maison,3.0,0,57.0,389.0,sols,Aiguillon,0.338821,44.29744
+2305899,2020-07-06,1,Sale,House,4.0,0,89.0,178.0,floors,Alfortville,2.417888,48.802354
+2455716,2020-09-30,1,Sale,Apartment,2.0,0,96.0,418.0,floors,Paris 20th Arrondissement,2.405539,48.869528
+1839085,2020-03-06,1,Sale,House,6.0,0,127.0,605.0,floors,Coupvray,2.802525,48.904325
+1943097,2020-09-01,1,Sale,Apartment,1.0,0,16.0,58.0,floors,Amiens,2.303676,49.895549
+510802,2020-09-17,1,Sale,House,7.0,0,175.0,772.0,floors,Muzy,1.33154,48.770507
+2269189,2020-01-29,1,Sale,Apartment,3.0,0,39.0,187.0,floors,Saint-Denis,2.360394,48.931585
+229935,2020-09-08,1,Sale,House,4.0,0,91.0,617.0,floors,Marseille 15th Arrondissement,5.375104,43.380541

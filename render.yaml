@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: deepdiabetic
+    runtime: python
+    plan: starter
+    buildCommand: bash build.sh
+    startCommand: python -m gunicorn Diabetic.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: APP_DB_BACKEND
+        value: sqlite
+      - key: APP_DATA_DIR
+        value: /opt/render/project/src/runtime_data
+    disk:
+      name: runtime-data
+      mountPath: /opt/render/project/src/runtime_data
+      sizeGB: 10

@@ -1,0 +1,12 @@
+django>=5.2,<5.3
+gunicorn>=23,<24
+whitenoise>=6.9,<7
+numpy>=2.0,<3
+opencv-python>=4.10,<5
+tensorflow-cpu>=2.21,<2.22
+matplotlib>=3.9,<4
+seaborn>=0.13,<0.14
+scikit-learn>=1.5,<2
+PyMySQL>=1.1,<2
+h5py>=3.14,<4
+psycopg[binary]>=3.2,<4

@@ -1,0 +1,135 @@
+{% load static %}
+<html>
+<head>
+<title>DeepDiabetic Dashboard</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<link rel="stylesheet" type="text/css" href="{% static 'style.css' %}?v=20260410b"/>
+</head>
+<body class="app-body">
+<div class="app-backdrop">
+	<div class="app-backdrop-orb app-backdrop-orb-a"></div>
+	<div class="app-backdrop-orb app-backdrop-orb-b"></div>
+</div>
+<div class="app-shell">
+	<div class="app-topbar">
+		<div>
+			<p class="eyebrow eyebrow-dark">DeepDiabetic</p>
+			<h1>{{ welcome_title|default:"Retinal screening dashboard" }}</h1>
+			<p class="app-subtitle">{{ welcome_text|default:"Manage your retina screening workflow and prediction results here." }}</p>
+		</div>
+		<a class="secondary-button" href="{% url 'LogoutUser' %}">Logout</a>
+	</div>
+	<div class="app-nav">
+		<a href="{% url 'Dashboard' %}">Dashboard</a>
+		<a href="{% url 'LoadDatasetAction' %}">Load Dataset</a>
+		<a href="{% url 'ProcessData' %}">Processed Data</a>
+		<a href="{% url 'RunML' %}">Run Algorithms</a>
+		<a href="{% url 'Predict' %}">Predict Disease</a>
+	</div>
+	<div class="page-shell">
+		{% if prediction_mode %}
+		<div class="result-layout">
+			<div class="result-summary {{ result.tone_class }}">
+				<p class="eyebrow">Prediction Result</p>
+				<h2>{{ result.label }}</h2>
+				<p class="result-confidence">Confidence: {{ result.confidence }}%</p>
+				<div class="meta-row">
+					<span class="meta-pill">{{ result.model_variant }}</span>
+					<span class="meta-pill">Inference size: {{ result.input_size }}</span>
+				</div>
+				<p class="result-text">{{ result.summary }}</p>
+				<p class="result-advice">{{ result.recommendation }}</p>
+				<div class="result-actions">
+					<a class="secondary-button" href="{% url 'Predict' %}">Test Another Image</a>
+				</div>
+			</div>
+			<div class="result-visuals">
+				<div class="result-card">
+					<h3>Uploaded Retina Image</h3>
+					<img class="result-photo" src="data:image/png;base64, {{ result.uploaded_b64 }}" alt="Uploaded retina image" />
+				</div>
+				<div class="result-card">
+					<h3>Prediction Overlay</h3>
+					<img class="result-photo" src="data:image/png;base64, {{ img }}" alt="Prediction overlay" />
+				</div>
+			</div>
+		</div>
+		{% elif dashboard_mode and not data and not img %}
+		<div class="dashboard-hero">
+			<div class="dashboard-hero-copy">
+				<p class="eyebrow">Workspace</p>
+				<h2>Choose the next step in the retinal screening workflow</h2>
+				<p>Move through dataset review, preprocessing insight, algorithm comparison, and retina-image prediction from one polished workspace.</p>
+			</div>
+			<div class="dashboard-orbital">
+				<div class="dashboard-orbital-ring"></div>
+				<div class="dashboard-orbital-core"></div>
+			</div>
+		</div>
+		<div class="dashboard-grid">
+			<a class="dashboard-card" href="{% url 'LoadDatasetAction' %}">
+				<h3>Load Dataset</h3>
+				<p>Review the disease labels available in the retina image dataset.</p>
+			</a>
+			<a class="dashboard-card" href="{% url 'ProcessData' %}">
+				<h3>Processed Data</h3>
+				<p>Inspect image counts, extracted features, and train-test split details.</p>
+			</a>
+			<a class="dashboard-card" href="{% url 'RunML' %}">
+				<h3>Run Algorithms</h3>
+				<p>See the stored performance metrics and confusion-matrix comparison.</p>
+			</a>
+			<a class="dashboard-card" href="{% url 'Predict' %}">
+				<h3>Predict Disease</h3>
+				<p>Upload a retina image and review the disease classification output.</p>
+			</a>
+		</div>
+		{% else %}
+		<div class="content-card">
+			{% if data %}
+			<div class="content-html">{{ data|safe }}</div>
+			{% endif %}
+			{% if img %}
+			<div class="chart-card">
+				<img class="chart-image" src="data:image/png;base64, {{ img }}" alt="Result graph" />
+			</div>
+			{% endif %}
+		</div>
+		{% endif %}
+	</div>
+</div>
+<div class="scroll-ui">
+	<div class="scroll-track"><div class="scroll-thumb" id="scrollThumb"></div></div>
+	<button class="scroll-step" id="scrollDownButton" type="button" aria-label="Scroll down">↓</button>
+	<button class="scroll-top" id="scrollTopButton" type="button" aria-label="Scroll to top">↑</button>
+</div>
+<script>
+(function() {
+	const thumb = document.getElementById('scrollThumb');
+	const button = document.getElementById('scrollTopButton');
+	const downButton = document.getElementById('scrollDownButton');
+	function updateScroller() {
+		const scrollTop = window.scrollY || document.documentElement.scrollTop;
+		const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+		const ratio = scrollHeight > 0 ? scrollTop / scrollHeight : 0;
+		thumb.style.transform = 'translateY(' + (ratio * 132) + 'px)';
+		button.classList.toggle('visible', scrollTop > 180);
+		downButton.classList.toggle('hidden', scrollTop > scrollHeight - 220);
+	}
+	button.addEventListener('click', function() {
+		window.scrollTo({ top: 0, behavior: 'smooth' });
+	});
+	downButton.addEventListener('click', function() {
+		window.scrollBy({ top: window.innerHeight * 0.85, behavior: 'smooth' });
+	});
+	window.addEventListener('scroll', updateScroller, { passive: true });
+	window.addEventListener('load', updateScroller);
+	updateScroller();
+})();
+</script>
+</body>
+</html>
