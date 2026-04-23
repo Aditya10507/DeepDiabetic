@@ -21,7 +21,11 @@ APP_DATA_DIR = os.environ.get('APP_DATA_DIR', BASE_DIR)
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+debug_env = os.environ.get('DEBUG')
+if debug_env is None:
+    DEBUG = 'SECRET_KEY' not in os.environ
+else:
+    DEBUG = debug_env.lower() == 'true'
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # In production, SECRET_KEY MUST be set via environment variable

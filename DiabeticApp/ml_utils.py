@@ -1,27 +1,8 @@
 import base64
 import io
 import os
-
-import cv2
-import matplotlib
-matplotlib.use('Agg')  # Use non-GUI backend for web applications
-import matplotlib.pyplot as plt
+import uuid
 import numpy as np
-import seaborn as sns
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import f1_score
-from sklearn.metrics import precision_score
-from sklearn.metrics import recall_score
-from sklearn.model_selection import train_test_split
-from tensorflow.keras.models import load_model
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.utils import to_categorical
-from tensorflow.keras.layers import Conv2D
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.layers import Flatten
-from tensorflow.keras.layers import Input
-from tensorflow.keras.layers import MaxPooling2D
 
 from .app_config import CM_PATH
 from .app_config import DATA_PATH
@@ -46,6 +27,40 @@ _dataset_cache = {
     "y_train": None,
     "y_test": None,
 }
+
+
+def _load_ml_dependencies():
+    import cv2
+    import matplotlib
+
+    matplotlib.use("Agg")
+
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    from sklearn.model_selection import train_test_split
+    from tensorflow.keras.layers import Conv2D
+    from tensorflow.keras.layers import Dense
+    from tensorflow.keras.layers import Flatten
+    from tensorflow.keras.layers import Input
+    from tensorflow.keras.layers import MaxPooling2D
+    from tensorflow.keras.models import Sequential
+    from tensorflow.keras.models import load_model
+    from tensorflow.keras.utils import to_categorical
+
+    return {
+        "cv2": cv2,
+        "plt": plt,
+        "sns": sns,
+        "train_test_split": train_test_split,
+        "Conv2D": Conv2D,
+        "Dense": Dense,
+        "Flatten": Flatten,
+        "Input": Input,
+        "MaxPooling2D": MaxPooling2D,
+        "Sequential": Sequential,
+        "load_model": load_model,
+        "to_categorical": to_categorical,
+    }
 
 DISEASE_DETAILS = {
     "Cataract": {
@@ -122,6 +137,8 @@ def build_dataset_arrays():
     Raises:
         FileNotFoundError: If dataset directory not found
     """
+    ml = _load_ml_dependencies()
+    cv2 = ml["cv2"]
     features = []
     targets = []
     for root, dirs, files in os.walk(DATASET_DIR):
@@ -162,6 +179,7 @@ def ensure_dataset_loaded():
         return _dataset_cache
 
     try:
+        ml = _load_ml_dependencies()
         if os.path.exists(X_PATH) and os.path.exists(Y_PATH):
             X = np.load(X_PATH)
             Y = np.load(Y_PATH)
@@ -173,8 +191,8 @@ def ensure_dataset_loaded():
         np.random.shuffle(indices)
         X = X[indices]
         Y = Y[indices]
-        Y = to_categorical(Y)
-        X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2)
+        Y = ml["to_categorical"](Y)
+        X_train, X_test, y_train, y_test = ml["train_test_split"](X, Y, test_size=0.2)
 
         if os.path.exists(DATA_PATH):
             data = np.load(DATA_PATH, allow_pickle=True)
@@ -205,6 +223,7 @@ def load_metrics():
         labels = load_labels()
         default_cm = np.zeros((len(labels), len(labels)), dtype=int)
         metrics = {
+            "model_names": [],
             "accuracy": [],
             "precision": [],
             "recall": [],
@@ -216,15 +235,17 @@ def load_metrics():
 
         if os.path.exists(METRIC_PATH) and os.path.exists(CM_PATH):
             metric = np.load(METRIC_PATH, allow_pickle=True)
+            metrics["model_names"].append("ResNet152V2")
             metrics["accuracy"].append(round(float(metric[0]) * 100, 3))
-            metrics["precision"].append(round(float(metric[1]) * 100, 3))
-            metrics["recall"].append(round(float(metric[2]) * 100, 3))
-            metrics["fscore"].append(round(float(metric[3]) * 100, 3))
+            metrics["precision"].append(round(float(metric[1]), 3))
+            metrics["recall"].append(round(float(metric[2]), 3))
+            metrics["fscore"].append(round(float(metric[3]), 3))
             metrics["resnet_cm"] = np.load(CM_PATH)
             return metrics
 
         if os.path.exists(LEGACY_METRIC_PATH) and os.path.exists(LEGACY_CM_PATH):
             legacy_metric = np.load(LEGACY_METRIC_PATH, allow_pickle=True)
+            metrics["model_names"].append("Legacy CNN")
             metrics["accuracy"].append(round(float(legacy_metric[0]) * 100, 3))
             metrics["precision"].append(round(float(legacy_metric[1]), 3))
             metrics["recall"].append(round(float(legacy_metric[2]), 3))
@@ -238,6 +259,7 @@ def load_metrics():
         labels = load_labels() if os.path.exists(DATASET_DIR) else []
         default_cm = np.zeros((len(labels) if labels else 4, len(labels) if labels else 4), dtype=int)
         return {
+            "model_names": [],
             "accuracy": [],
             "precision": [],
             "recall": [],
@@ -261,16 +283,24 @@ def save_uploaded_image(upload):
         IOError: If file cannot be saved
     """
     try:
-        filename = upload.name
-        file_path = os.path.join(STATIC_DIR, filename)
-        if os.path.exists(file_path):
-            os.remove(file_path)
-        os.makedirs(STATIC_DIR, exist_ok=True)  # Ensure directory exists
+        original_name = os.path.basename(upload.name or "")
+        _, extension = os.path.splitext(original_name)
+        extension = extension.lower()
+        if extension not in {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff"}:
+            raise ValueError("Unsupported image type. Please upload a JPG, PNG, BMP, or TIFF image.")
+
+        os.makedirs(STATIC_DIR, exist_ok=True)
+        filename = f"upload_{uuid.uuid4().hex}{extension}"
+        file_path = os.path.abspath(os.path.join(STATIC_DIR, filename))
+        static_dir_path = os.path.abspath(STATIC_DIR)
+        if os.path.commonpath([static_dir_path, file_path]) != static_dir_path:
+            raise ValueError("Invalid upload path.")
+
         with open(file_path, "wb") as file:
             file.write(upload.read())
         return file_path
-    except IOError as e:
-        raise IOError(f"Failed to save uploaded image: {str(e)}")
+    except (IOError, ValueError) as e:
+        raise type(e)(f"Failed to save uploaded image: {str(e)}")
 
 
 def build_classifier(input_shape, num_classes):
@@ -283,16 +313,17 @@ def build_classifier(input_shape, num_classes):
     Returns:
         keras.models.Sequential: Compiled CNN model ready for training/inference
     """
-    model = Sequential(
+    ml = _load_ml_dependencies()
+    model = ml["Sequential"](
         [
-            Input(shape=input_shape),
-            Conv2D(32, (3, 3), activation="relu"),
-            MaxPooling2D(pool_size=(2, 2)),
-            Conv2D(32, (3, 3), activation="relu"),
-            MaxPooling2D(pool_size=(2, 2)),
-            Flatten(),
-            Dense(units=256, activation="relu"),
-            Dense(units=num_classes, activation="softmax"),
+            ml["Input"](shape=input_shape),
+            ml["Conv2D"](32, (3, 3), activation="relu"),
+            ml["MaxPooling2D"](pool_size=(2, 2)),
+            ml["Conv2D"](32, (3, 3), activation="relu"),
+            ml["MaxPooling2D"](pool_size=(2, 2)),
+            ml["Flatten"](),
+            ml["Dense"](units=256, activation="relu"),
+            ml["Dense"](units=num_classes, activation="softmax"),
         ]
     )
     model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
@@ -320,6 +351,9 @@ def predict_uploaded_image(file_path):
         FileNotFoundError: If image file cannot be read
     """
     try:
+        ml = _load_ml_dependencies()
+        cv2 = ml["cv2"]
+        plt = ml["plt"]
         labels = load_labels()
         model = None
         inference_size = IMAGE_SIZE
@@ -327,7 +361,7 @@ def predict_uploaded_image(file_path):
 
         if os.path.exists(EFFICIENT_WEIGHTS_PATH):
             try:
-                model = load_model(EFFICIENT_WEIGHTS_PATH)
+                model = ml["load_model"](EFFICIENT_WEIGHTS_PATH)
             except Exception:
                 model = build_classifier((IMAGE_SIZE[0], IMAGE_SIZE[1], 3), len(labels))
                 model.load_weights(EFFICIENT_WEIGHTS_PATH)
@@ -411,21 +445,37 @@ def build_metrics_plot():
             - base64_image: Base64 encoded PNG visualization of all three confusion matrices
     """
     try:
+        ml = _load_ml_dependencies()
+        plt = ml["plt"]
+        sns = ml["sns"]
         labels = load_labels()
         metrics = load_metrics()
-        figure, axis = plt.subplots(nrows=1, ncols=3, figsize=(10, 4))
-        axis[0].set_title("EfficientNetB0")
-        axis[1].set_title("VGG16")
-        axis[2].set_title("ResNet152V2")
+        available_confusion_matrices = []
+        if metrics["model_names"]:
+            available_confusion_matrices.append((metrics["model_names"][0], metrics["resnet_cm"]))
+        else:
+            available_confusion_matrices.append(("No saved model metrics", metrics["resnet_cm"]))
 
-        heatmap_1 = sns.heatmap(metrics["efficient_cm"], xticklabels=labels, yticklabels=labels, annot=True, cmap="viridis", fmt="g", ax=axis[0])
-        heatmap_1.set_ylim([0, len(labels)])
+        figure, axis = plt.subplots(
+            nrows=1,
+            ncols=len(available_confusion_matrices),
+            figsize=(max(4, 4 * len(available_confusion_matrices)), 4),
+        )
+        if not isinstance(axis, np.ndarray):
+            axis = np.asarray([axis])
 
-        heatmap_2 = sns.heatmap(metrics["vgg_cm"], xticklabels=labels, yticklabels=labels, annot=True, cmap="viridis", fmt="g", ax=axis[1])
-        heatmap_2.set_ylim([0, len(labels)])
-
-        heatmap_3 = sns.heatmap(metrics["resnet_cm"], xticklabels=labels, yticklabels=labels, annot=True, cmap="viridis", fmt="g", ax=axis[2])
-        heatmap_3.set_ylim([0, len(labels)])
+        for subplot, (model_name, matrix) in zip(axis, available_confusion_matrices):
+            subplot.set_title(model_name)
+            heatmap = sns.heatmap(
+                matrix,
+                xticklabels=labels,
+                yticklabels=labels,
+                annot=True,
+                cmap="viridis",
+                fmt="g",
+                ax=subplot,
+            )
+            heatmap.set_ylim([0, len(labels)])
 
         figure.tight_layout()
         buffer = io.BytesIO()
@@ -440,6 +490,7 @@ def build_metrics_plot():
         labels = load_labels() if os.path.exists(DATASET_DIR) else []
         default_cm = np.zeros((len(labels) if labels else 4, len(labels) if labels else 4), dtype=int)
         return {
+            "model_names": [],
             "accuracy": [],
             "precision": [],
             "recall": [],

@@ -202,9 +202,36 @@ def Predict(request):
 def PredictAction(request):
     if request.method != "POST":
         return redirect("Predict")
-    
+
     logger.info(f"Prediction requested by user: {request.user.username}")
-    file_path = save_uploaded_image(request.FILES["t1"])
+    upload = request.FILES.get("t1")
+    if upload is None:
+        return render(
+            request,
+            "Predict.html",
+            {
+                "data": "Please choose a retina image before running prediction.",
+                "dashboard_mode": True,
+                "welcome_title": "Prediction workflow",
+                "welcome_text": "Upload a retina image to classify the likely eye disease category.",
+            },
+        )
+
+    try:
+        file_path = save_uploaded_image(upload)
+    except (IOError, ValueError) as exc:
+        logger.error(f"Prediction upload failed for user {request.user.username}: {exc}")
+        return render(
+            request,
+            "Predict.html",
+            {
+                "data": str(exc),
+                "dashboard_mode": True,
+                "welcome_title": "Prediction workflow",
+                "welcome_text": "Upload a retina image to classify the likely eye disease category.",
+            },
+        )
+
     result, image_b64, error_message = predict_uploaded_image(file_path)
     if error_message:
         logger.error(f"Prediction failed for user {request.user.username}: {error_message}")
@@ -277,9 +304,12 @@ def RunML(request):
     for column in columns:
         output += '<th><font size="3" color="black">' + column + "</th>"
     output += "</tr>"
-    row_names = ["EfficientNetB0", "VGG16", "ResNet152V2"]
-    for i in range(len(metrics["accuracy"])):
-        output += '<tr><td><font size="3" color="black">' + row_names[i] + "</td>"
+
+    if not metrics["model_names"]:
+        output += '<tr><td colspan="5"><font size="3" color="black">No saved model metrics are available yet. Train and save a model to populate this table.</td></tr>'
+
+    for i, model_name in enumerate(metrics["model_names"]):
+        output += '<tr><td><font size="3" color="black">' + model_name + "</td>"
         output += '<td><font size="3" color="black">' + str(metrics["accuracy"][i]) + "</td>"
         output += '<td><font size="3" color="black">' + str(metrics["precision"][i]) + "</td>"
         output += '<td><font size="3" color="black">' + str(metrics["recall"][i]) + "</td>"
