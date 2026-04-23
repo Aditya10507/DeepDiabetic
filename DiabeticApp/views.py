@@ -260,13 +260,20 @@ def PredictAction(request):
 
 @login_required
 def ProcessData(request):
-    dataset = ensure_dataset_loaded()
-    output = "<div class='stats-grid'>"
-    output += "<div class='stat-box'><span>Total images</span><strong>" + str(dataset["X"].shape[0]) + "</strong></div>"
-    output += "<div class='stat-box'><span>Features per image</span><strong>" + str(dataset["X"].shape[1] * dataset["X"].shape[2] * dataset["X"].shape[3]) + "</strong></div>"
-    output += "<div class='stat-box'><span>Training samples</span><strong>" + str(dataset["X_train"].shape[0]) + "</strong></div>"
-    output += "<div class='stat-box'><span>Testing samples</span><strong>" + str(dataset["X_test"].shape[0]) + "</strong></div>"
-    output += "</div>"
+    try:
+        dataset = ensure_dataset_loaded()
+        output = "<div class='stats-grid'>"
+        output += "<div class='stat-box'><span>Total images</span><strong>" + str(dataset["X"].shape[0]) + "</strong></div>"
+        output += "<div class='stat-box'><span>Features per image</span><strong>" + str(dataset["X"].shape[1] * dataset["X"].shape[2] * dataset["X"].shape[3]) + "</strong></div>"
+        output += "<div class='stat-box'><span>Training samples</span><strong>" + str(dataset["X_train"].shape[0]) + "</strong></div>"
+        output += "<div class='stat-box'><span>Testing samples</span><strong>" + str(dataset["X_test"].shape[0]) + "</strong></div>"
+        output += "</div>"
+    except RuntimeError as exc:
+        logger.warning("Dataset processing unavailable: %s", exc)
+        output = (
+            "<div class='alert-box'>Dataset processing is unavailable on this deployment right now. "
+            "Upload the dataset and generated numpy files to enable preprocessing insights.</div>"
+        )
     return render(
         request,
         "UserScreen.html",
@@ -281,9 +288,16 @@ def ProcessData(request):
 
 @login_required
 def LoadDatasetAction(request):
-    labels = load_labels()
-    chips = "".join([f"<span class='label-chip'>{label}</span>" for label in labels])
-    output = "<div class='label-chip-row'>" + chips + "</div>"
+    try:
+        labels = load_labels()
+        chips = "".join([f"<span class='label-chip'>{label}</span>" for label in labels])
+        output = "<div class='label-chip-row'>" + chips + "</div>"
+    except FileNotFoundError as exc:
+        logger.warning("Dataset labels unavailable: %s", exc)
+        output = (
+            "<div class='alert-box'>Dataset labels are not available on this deployment yet. "
+            "Add the dataset directory to enable label browsing.</div>"
+        )
     return render(
         request,
         "UserScreen.html",
