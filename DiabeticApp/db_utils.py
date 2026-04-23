@@ -2,15 +2,19 @@ import os
 import sqlite3
 
 import pymysql
+import psycopg
 
 from .app_config import APP_DB_BACKEND
 from .app_config import MYSQL_CONFIG
+from .app_config import POSTGRES_CONFIG
 from .app_config import SQLITE_DB_PATH
 
 
 def get_connection():
     if APP_DB_BACKEND == "mysql":
         return pymysql.connect(**MYSQL_CONFIG)
+    if APP_DB_BACKEND in ("postgresql", "postgres"):
+        return psycopg.connect(**POSTGRES_CONFIG)
     os.makedirs(os.path.dirname(SQLITE_DB_PATH), exist_ok=True)
     connection = sqlite3.connect(SQLITE_DB_PATH)
     ensure_sqlite_schema(connection)
@@ -34,7 +38,7 @@ def ensure_sqlite_schema(connection):
 
 
 def _placeholder():
-    return "%s" if APP_DB_BACKEND == "mysql" else "?"
+    return "%s" if APP_DB_BACKEND in ("mysql", "postgresql", "postgres") else "?"
 
 
 def _fetchall(query, params=()):

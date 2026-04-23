@@ -11,10 +11,16 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+import shlex
+from urllib.parse import parse_qs
+from urllib.parse import unquote
+from urllib.parse import urlparse
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP_DATA_DIR = os.environ.get('APP_DATA_DIR', BASE_DIR)
+LOG_DIR = os.path.join(BASE_DIR, 'Diabetic', 'logs')
+os.makedirs(LOG_DIR, exist_ok=True)
 
 
 # Quick-start development settings - unsuitable for production
@@ -91,6 +97,86 @@ WSGI_APPLICATION = 'Diabetic.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
+
+def _parse_kv_connection_string(connection_string):
+    config = {}
+    for token in shlex.split(connection_string):
+        if "=" not in token:
+            continue
+        key, value = token.split("=", 1)
+        config[key.strip().lower()] = value.strip()
+    return config
+
+
+def _parse_database_url(connection_string):
+    parsed = urlparse(connection_string)
+    query = parse_qs(parsed.query)
+    return {
+        'NAME': unquote(parsed.path.lstrip('/')),
+        'USER': unquote(parsed.username or ''),
+        'PASSWORD': unquote(parsed.password or ''),
+        'HOST': parsed.hostname or '',
+        'PORT': str(parsed.port or '5432'),
+        'OPTIONS': {
+            'sslmode': query.get('sslmode', [os.environ.get('DB_SSLMODE', 'require')])[0],
+        },
+    }
+
+
+def _build_postgres_database(connection_string=None):
+    if connection_string:
+        if '://' in connection_string:
+            database = _parse_database_url(connection_string)
+        else:
+            parsed = _parse_kv_connection_string(connection_string)
+            database = {
+                'NAME': parsed.get('dbname', parsed.get('database', '')),
+                'USER': parsed.get('user', parsed.get('username', '')),
+                'PASSWORD': parsed.get('password', ''),
+                'HOST': parsed.get('host', ''),
+                'PORT': parsed.get('port', '5432'),
+                'OPTIONS': {
+                    'sslmode': parsed.get('sslmode', os.environ.get('DB_SSLMODE', 'require')),
+                },
+            }
+            ssl_root_cert = parsed.get('sslrootcert')
+            if ssl_root_cert:
+                database['OPTIONS']['sslrootcert'] = ssl_root_cert
+    else:
+        database = {
+            'NAME': os.environ.get('AZURE_POSTGRESQL_NAME', os.environ.get('DB_NAME', '')),
+            'USER': os.environ.get('AZURE_POSTGRESQL_USER', os.environ.get('DB_USER', '')),
+            'PASSWORD': os.environ.get('AZURE_POSTGRESQL_PASSWORD', os.environ.get('DB_PASSWORD', '')),
+            'HOST': os.environ.get('AZURE_POSTGRESQL_HOST', os.environ.get('DB_HOST', '')),
+            'PORT': os.environ.get('AZURE_POSTGRESQL_PORT', os.environ.get('DB_PORT', '5432')),
+            'OPTIONS': {
+                'sslmode': os.environ.get('AZURE_POSTGRESQL_SSLMODE', os.environ.get('DB_SSLMODE', 'require')),
+            },
+        }
+        ssl_root_cert = os.environ.get('AZURE_POSTGRESQL_SSLROOTCERT', os.environ.get('DB_SSLROOTCERT', ''))
+        if ssl_root_cert:
+            database['OPTIONS']['sslrootcert'] = ssl_root_cert
+
+    return {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': database['NAME'],
+        'USER': database['USER'],
+        'PASSWORD': database['PASSWORD'],
+        'HOST': database['HOST'],
+        'PORT': database['PORT'],
+        'CONN_MAX_AGE': int(os.environ.get('DB_CONN_MAX_AGE', '60')),
+        'OPTIONS': database['OPTIONS'],
+    }
+
+
+azure_connection_string = os.environ.get('AZURE_POSTGRESQL_CONNECTIONSTRING', '')
+database_url = os.environ.get('DATABASE_URL', '')
+app_service_postgres_connection = ''
+for env_name, env_value in os.environ.items():
+    if env_name.startswith('POSTGRESQLCONNSTR_') and env_value:
+        app_service_postgres_connection = env_value
+        break
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -99,18 +185,14 @@ DATABASES = {
 }
 
 db_engine = os.environ.get('DB_ENGINE', '').lower()
-if db_engine in ('postgresql', 'postgres'):
-    DATABASES['default'] = {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', ''),
-        'USER': os.environ.get('DB_USER', ''),
-        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-        'HOST': os.environ.get('DB_HOST', ''),
-        'PORT': os.environ.get('DB_PORT', '5432'),
-        'OPTIONS': {
-            'sslmode': os.environ.get('DB_SSLMODE', 'require'),
-        },
-    }
+if database_url:
+    DATABASES['default'] = _build_postgres_database(database_url)
+elif azure_connection_string:
+    DATABASES['default'] = _build_postgres_database(azure_connection_string)
+elif app_service_postgres_connection:
+    DATABASES['default'] = _build_postgres_database(app_service_postgres_connection)
+elif db_engine in ('postgresql', 'postgres'):
+    DATABASES['default'] = _build_postgres_database()
 
 
 # Password validation
@@ -161,7 +243,7 @@ LOGGING = {
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'Diabetic', 'logs', 'debug.log'),
+            'filename': os.path.join(LOG_DIR, 'debug.log'),
         },
         'console': {
             'level': 'INFO',

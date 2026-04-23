@@ -31,4 +31,13 @@ MYSQL_CONFIG = {
     "charset": "utf8",
 }
 
-APP_DB_BACKEND = os.environ.get("APP_DB_BACKEND", "sqlite").lower()
+POSTGRES_CONFIG = {
+    "host": os.environ.get("AZURE_POSTGRESQL_HOST", os.environ.get("DB_HOST", "127.0.0.1")),
+    "port": int(os.environ.get("AZURE_POSTGRESQL_PORT", os.environ.get("DB_PORT", "5432"))),
+    "user": os.environ.get("AZURE_POSTGRESQL_USER", os.environ.get("DB_USER", "")),
+    "password": os.environ.get("AZURE_POSTGRESQL_PASSWORD", os.environ.get("DB_PASSWORD", "")),
+    "dbname": os.environ.get("AZURE_POSTGRESQL_NAME", os.environ.get("DB_NAME", "")),
+    "sslmode": os.environ.get("AZURE_POSTGRESQL_SSLMODE", os.environ.get("DB_SSLMODE", "require")),
+}
+
+APP_DB_BACKEND = os.environ.get("APP_DB_BACKEND", os.environ.get("DB_ENGINE", "sqlite")).lower()

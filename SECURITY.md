@@ -45,6 +45,12 @@ DB_SSLMODE=require
 - Use strong, randomly generated passwords
 - Restrict database access to application server only
 
+Azure Database for PostgreSQL is supported through the same settings or through Azure-provided values such as:
+
+```
+AZURE_POSTGRESQL_CONNECTIONSTRING=host=<server>.postgres.database.azure.com port=5432 dbname=<database> sslmode=require user=<username> password=<password>
+```
+
 ### MySQL
 ```
 MYSQL_HOST=localhost
