@@ -19,7 +19,9 @@ from urllib.parse import urlparse
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP_DATA_DIR = os.environ.get('APP_DATA_DIR', BASE_DIR)
-LOG_DIR = os.path.join(BASE_DIR, 'Diabetic', 'logs')
+os.makedirs(APP_DATA_DIR, exist_ok=True)
+
+LOG_DIR = os.environ.get('LOG_DIR', os.path.join(APP_DATA_DIR, 'logs'))
 os.makedirs(LOG_DIR, exist_ok=True)
 
 
