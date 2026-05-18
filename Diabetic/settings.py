@@ -48,6 +48,19 @@ extra_hosts = os.environ.get('ALLOWED_HOSTS', '')
 if extra_hosts:
     ALLOWED_HOSTS.extend([host.strip() for host in extra_hosts.split(',') if host.strip()])
 
+azure_default_hostname = os.environ.get('WEBSITE_HOSTNAME', '')
+if azure_default_hostname:
+    ALLOWED_HOSTS.append(azure_default_hostname)
+
+_trusted_hosts = [host for host in ALLOWED_HOSTS if host and host != 'testserver']
+CSRF_TRUSTED_ORIGINS = sorted(
+    {
+        f'https://{host}'
+        for host in _trusted_hosts
+        if not host.startswith('.')
+    }
+)
+
 
 # Application definition
 
@@ -260,6 +273,8 @@ LOGGING = {
 }
 
 if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    USE_X_FORWARDED_HOST = True
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
