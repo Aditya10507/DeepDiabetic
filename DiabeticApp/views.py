@@ -1,4 +1,5 @@
 import logging
+import os
 from django.contrib.auth import authenticate
 from django.contrib.auth import login
 from django.contrib.auth import logout
@@ -20,7 +21,7 @@ from .models import UserProfile
 logger = logging.getLogger(__name__)
 
 def health_check(request):
-    return JsonResponse({'status': 'ok'})
+    return JsonResponse({'status': 'ok', 'build': os.environ.get('BUILD_VERSION', 'local')})
 
 
 def _render_auth_page(request, template_name, form, title, subtitle, form_mode):

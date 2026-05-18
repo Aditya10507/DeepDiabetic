@@ -16,6 +16,8 @@ services:
         value: ".onrender.com,deepdiabetic.onrender.com"
       - key: SHOW_ERROR_DETAILS
         value: "True"
+      - key: BUILD_VERSION
+        value: "diagnostic-20260518-8d27ee2"
       - key: APP_DB_BACKEND
         value: sqlite
       - key: APP_DATA_DIR

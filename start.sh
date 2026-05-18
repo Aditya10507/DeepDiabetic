@@ -3,6 +3,7 @@ set -o errexit
 
 PORT="${PORT:-8000}"
 
+echo "DeepDiabetic build version: ${BUILD_VERSION:-local}"
 echo "Running Django migrations before startup..."
 timeout 60s python manage.py migrate --no-input || echo "Migration step failed or timed out; continuing so the web service can start."
 
