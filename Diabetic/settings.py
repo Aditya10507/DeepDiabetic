@@ -41,7 +41,7 @@ if not DEBUG and 'SECRET_KEY' not in os.environ:
     raise ValueError('SECRET_KEY environment variable must be set in production (DEBUG=False)')
 SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-only-secret-key-change-in-production')
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'testserver']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'testserver', '.onrender.com']
 render_hostname = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if render_hostname:
     ALLOWED_HOSTS.append(render_hostname)
