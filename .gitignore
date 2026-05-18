@@ -83,8 +83,8 @@ target/
 profile_default/
 ipython_config.py
 
-# pyenv
-.python-version
+# Render uses this file to select the deploy runtime.
+!.python-version
 
 # celery beat schedule file
 celerybeat-schedule

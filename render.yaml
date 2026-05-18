@@ -10,6 +10,8 @@ services:
         generateValue: true
       - key: DEBUG
         value: "False"
+      - key: PYTHON_VERSION
+        value: "3.11.9"
       - key: APP_DB_BACKEND
         value: sqlite
       - key: APP_DATA_DIR
