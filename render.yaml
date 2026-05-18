@@ -4,7 +4,7 @@ services:
     runtime: python
     plan: starter
     buildCommand: bash build.sh
-    startCommand: bash -c "python manage.py migrate --no-input && python -m gunicorn Diabetic.wsgi:application --bind 0.0.0.0:$PORT"
+    startCommand: bash start.sh
     envVars:
       - key: SECRET_KEY
         generateValue: true
