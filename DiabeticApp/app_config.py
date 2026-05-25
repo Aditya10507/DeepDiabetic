@@ -2,6 +2,7 @@ import os
 
 
 IMAGE_SIZE = (224, 224)
+DEFAULT_LABELS = ["Cataract", "DME", "DR", "Glaucoma"]
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP_DATA_DIR = os.environ.get("APP_DATA_DIR", BASE_DIR)
 

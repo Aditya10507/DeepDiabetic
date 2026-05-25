@@ -7,6 +7,7 @@ import numpy as np
 from .app_config import CM_PATH
 from .app_config import DATA_PATH
 from .app_config import DATASET_DIR
+from .app_config import DEFAULT_LABELS
 from .app_config import EFFICIENT_WEIGHTS_PATH
 from .app_config import IMAGE_SIZE
 from .app_config import LEGACY_CM_PATH
@@ -99,12 +100,15 @@ def load_labels():
         return _dataset_cache["labels"]
     labels = []
     if not os.path.exists(DATASET_DIR):
-        raise FileNotFoundError(f"Dataset directory not found: {DATASET_DIR}")
+        _dataset_cache["labels"] = DEFAULT_LABELS
+        return _dataset_cache["labels"]
     for root, dirs, files in os.walk(DATASET_DIR):
         for _ in files:
             name = os.path.basename(root)
             if name not in labels:
                 labels.append(name.strip())
+    if not labels:
+        labels = DEFAULT_LABELS
     _dataset_cache["labels"] = labels
     return labels
 

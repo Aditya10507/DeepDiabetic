@@ -134,7 +134,10 @@ docker-compose.yml
 
 # Project specific
 Dataset/
-model/
+model/*
+!model/efficient_weights.hdf5
+!model/metric.npy
+!model/cm.npy
 SCREENS.docx
 server.err.log
 server.log
