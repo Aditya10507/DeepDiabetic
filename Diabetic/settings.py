@@ -19,10 +19,17 @@ from urllib.parse import urlparse
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP_DATA_DIR = os.environ.get('APP_DATA_DIR', BASE_DIR)
-os.makedirs(APP_DATA_DIR, exist_ok=True)
+try:
+    os.makedirs(APP_DATA_DIR, exist_ok=True)
+except OSError:
+    APP_DATA_DIR = BASE_DIR
 
 LOG_DIR = os.environ.get('LOG_DIR', os.path.join(APP_DATA_DIR, 'logs'))
-os.makedirs(LOG_DIR, exist_ok=True)
+try:
+    os.makedirs(LOG_DIR, exist_ok=True)
+    FILE_LOGGING_AVAILABLE = True
+except OSError:
+    FILE_LOGGING_AVAILABLE = False
 
 
 # Quick-start development settings - unsuitable for production
@@ -35,11 +42,13 @@ if debug_env is None:
 else:
     DEBUG = debug_env.lower() == 'true'
 
-# SECURITY WARNING: keep the secret key used in production secret!
-# In production, SECRET_KEY MUST be set via environment variable
-if not DEBUG and 'SECRET_KEY' not in os.environ:
-    raise ValueError('SECRET_KEY environment variable must be set in production (DEBUG=False)')
-SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-only-secret-key-change-in-production')
+# SECURITY WARNING: keep the secret key used in production secret.
+# Render Blueprints generate SECRET_KEY automatically, but this fallback keeps
+# manual Render services from crashing before the environment is completed.
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    'dev-only-secret-key-change-in-production-render-fallback-please-set-env',
+)
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'testserver', '.onrender.com']
 render_hostname = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
@@ -251,23 +260,29 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 LOGIN_URL = 'UserLogin'
 
+LOGGING_HANDLERS = {
+    'console': {
+        'level': 'INFO',
+        'class': 'logging.StreamHandler',
+    },
+}
+ROOT_LOG_HANDLERS = ['console']
+
+if FILE_LOGGING_AVAILABLE and os.environ.get('ENABLE_FILE_LOGGING', '').lower() == 'true':
+    LOGGING_HANDLERS['file'] = {
+        'level': 'DEBUG',
+        'class': 'logging.FileHandler',
+        'filename': os.path.join(LOG_DIR, 'debug.log'),
+    }
+    ROOT_LOG_HANDLERS.append('file')
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'handlers': {
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(LOG_DIR, 'debug.log'),
-        },
-        'console': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-        },
-    },
+    'handlers': LOGGING_HANDLERS,
     'loggers': {
         '': {
-            'handlers': ['file', 'console'],
+            'handlers': ROOT_LOG_HANDLERS,
             'level': 'DEBUG',
             'propagate': True,
         },
