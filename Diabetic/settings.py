@@ -50,10 +50,21 @@ SECRET_KEY = os.environ.get(
     'dev-only-secret-key-change-in-production-render-fallback-please-set-env',
 )
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'testserver', '.onrender.com']
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    'testserver',
+    '.onrender.com',
+    '.railway.app',
+    '.up.railway.app',
+]
 render_hostname = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if render_hostname:
     ALLOWED_HOSTS.append(render_hostname)
+
+railway_hostname = os.environ.get('RAILWAY_PUBLIC_DOMAIN')
+if railway_hostname:
+    ALLOWED_HOSTS.append(railway_hostname)
 
 extra_hosts = os.environ.get('ALLOWED_HOSTS', '')
 if extra_hosts:

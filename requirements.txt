@@ -4,7 +4,7 @@ Django==4.2.13
 gunicorn==21.2.0
 whitenoise==6.6.0
 numpy==1.24.3
-opencv-python==4.8.1.78
+opencv-python-headless==4.8.1.78
 tensorflow==2.13.0
 matplotlib==3.7.2
 seaborn==0.12.2
