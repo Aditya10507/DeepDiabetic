@@ -7,7 +7,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
-<link rel="stylesheet" type="text/css" href="{% static 'style.css' %}?v=20260410c"/>
+<link rel="stylesheet" type="text/css" href="{% static 'style.css' %}?v=20260624b"/>
+<link rel="icon" href="{% static '0.jpg' %}" />
 </head>
 <body class="landing-body cosmic-body">
 <div class="cosmic-stage">
@@ -39,76 +40,40 @@
 <main class="landing-page cosmic-landing">
 	<div class="landing-copy cosmic-copy">
 		<p class="eyebrow eyebrow-dark">DeepDiabetic Screening</p>
-		<h1>See retinal disease risk through a cinematic screening experience</h1>
-		<p class="landing-text">Sign in or create your account to continue into the retinal disease workflow. The landing view now stays closer to the reference you shared with a luminous space-iris background and a calmer premium look.</p>
+		<h1>Diabetic eye disease identification system</h1>
+		<p class="landing-text">A web-based retinal screening workflow for reviewing disease labels, model metrics, and image classification results in a simple clinical dashboard.</p>
 		<div class="landing-actions">
 			<a class="hero-button hero-primary" href="{% url 'UserLogin' %}">Login</a>
 			<a class="hero-button hero-secondary" href="{% url 'Register' %}">Signup</a>
 		</div>
 		<div class="landing-stats">
 			<div class="landing-stat"><strong>4</strong><span>Disease classes</span></div>
-			<div class="landing-stat"><strong>Secure</strong><span>Email account access</span></div>
-			<div class="landing-stat"><strong>AI</strong><span>Retina screening workflow</span></div>
+			<div class="landing-stat"><strong>Login</strong><span>Email account access</span></div>
+			<div class="landing-stat"><strong>Model</strong><span>Retina image inference</span></div>
 		</div>
 	</div>
 </main>
 
 <section class="landing-section cosmic-section">
 	<div class="landing-section-card cosmic-panel">
-		<p class="eyebrow">Why This Flow</p>
-		<h2>Scroll deeper into the eye-guided screening journey</h2>
+		<p class="eyebrow">Workflow</p>
+		<h2>Designed for a clear project demonstration</h2>
 		<div class="landing-feature-grid">
 			<div class="landing-feature">
-				<h3>Immersive entry</h3>
-				<p>A darker, high-contrast landing scene makes the platform feel like a vision-tech product rather than a plain HTML portal.</p>
+				<h3>Dataset review</h3>
+				<p>Inspect the disease categories and the processed dataset summary available to the application.</p>
 			</div>
 			<div class="landing-feature">
-				<h3>Real account workflow</h3>
-				<p>Users register with their details, login with email, and continue into protected retinal disease screens.</p>
+				<h3>Account access</h3>
+				<p>Login with email credentials to enter the protected screening dashboard.</p>
 			</div>
 			<div class="landing-feature">
-				<h3>Prediction continuity</h3>
-				<p>From signup to upload, the experience stays cohesive, atmospheric, and focused on eye-disease analysis.</p>
+				<h3>Prediction output</h3>
+				<p>Upload a retina image and review the disease prediction, confidence score, and recommendation note.</p>
 			</div>
 		</div>
 	</div>
 </section>
 
-<div class="scroll-ui">
-	<div class="scroll-track"><div class="scroll-thumb" id="scrollThumb"></div></div>
-	<button class="scroll-step" id="scrollDownButton" type="button" aria-label="Scroll down">&#8595;</button>
-	<button class="scroll-top" id="scrollTopButton" type="button" aria-label="Scroll to top">&#8593;</button>
-</div>
-
-<script>
-(function() {
-	const thumb = document.getElementById('scrollThumb');
-	const topButton = document.getElementById('scrollTopButton');
-	const downButton = document.getElementById('scrollDownButton');
-
-	function updateScroller() {
-		const scrollTop = window.scrollY || document.documentElement.scrollTop;
-		const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-		const ratio = scrollHeight > 0 ? scrollTop / scrollHeight : 0;
-		thumb.style.transform = 'translateY(' + (ratio * 132) + 'px)';
-		topButton.classList.toggle('visible', scrollTop > 180);
-		downButton.classList.toggle('hidden', scrollTop > scrollHeight - 220);
-	}
-
-	topButton.addEventListener('click', function() {
-		window.scrollTo({ top: 0, behavior: 'smooth' });
-	});
-
-	downButton.addEventListener('click', function() {
-		window.scrollBy({ top: window.innerHeight * 0.88, behavior: 'smooth' });
-	});
-
-	window.addEventListener('scroll', updateScroller, { passive: true });
-	window.addEventListener('load', function() {
-		updateScroller();
-	});
-	updateScroller();
-})();
-</script>
 </body>
 </html>

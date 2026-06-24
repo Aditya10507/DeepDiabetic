@@ -26,4 +26,4 @@ RUN mkdir -p "$APP_DATA_DIR" \
 
 EXPOSE 7860
 
-CMD python manage.py migrate --noinput && gunicorn Diabetic.wsgi:application --bind 0.0.0.0:${PORT} --workers 1 --timeout 180
+CMD python manage.py migrate --noinput && python manage.py ensure_default_user && gunicorn Diabetic.wsgi:application --bind 0.0.0.0:${PORT} --workers 1 --timeout 180

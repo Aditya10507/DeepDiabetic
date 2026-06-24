@@ -7,7 +7,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
-<link rel="stylesheet" type="text/css" href="{% static 'style.css' %}?v=20260410b"/>
+<link rel="stylesheet" type="text/css" href="{% static 'style.css' %}?v=20260624b"/>
+<link rel="icon" href="{% static '0.jpg' %}" />
 </head>
 <body class="app-body">
 <div class="app-backdrop">
@@ -63,11 +64,7 @@
 			<div class="dashboard-hero-copy">
 				<p class="eyebrow">Workspace</p>
 				<h2>Choose the next step in the retinal screening workflow</h2>
-				<p>Move through dataset review, preprocessing insight, algorithm comparison, and retina-image prediction from one polished workspace.</p>
-			</div>
-			<div class="dashboard-orbital">
-				<div class="dashboard-orbital-ring"></div>
-				<div class="dashboard-orbital-core"></div>
+				<p>Move through dataset review, preprocessing details, stored model metrics, and retina image prediction from one dashboard.</p>
 			</div>
 		</div>
 		<div class="dashboard-grid">
@@ -102,34 +99,5 @@
 		{% endif %}
 	</div>
 </div>
-<div class="scroll-ui">
-	<div class="scroll-track"><div class="scroll-thumb" id="scrollThumb"></div></div>
-	<button class="scroll-step" id="scrollDownButton" type="button" aria-label="Scroll down">↓</button>
-	<button class="scroll-top" id="scrollTopButton" type="button" aria-label="Scroll to top">↑</button>
-</div>
-<script>
-(function() {
-	const thumb = document.getElementById('scrollThumb');
-	const button = document.getElementById('scrollTopButton');
-	const downButton = document.getElementById('scrollDownButton');
-	function updateScroller() {
-		const scrollTop = window.scrollY || document.documentElement.scrollTop;
-		const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-		const ratio = scrollHeight > 0 ? scrollTop / scrollHeight : 0;
-		thumb.style.transform = 'translateY(' + (ratio * 132) + 'px)';
-		button.classList.toggle('visible', scrollTop > 180);
-		downButton.classList.toggle('hidden', scrollTop > scrollHeight - 220);
-	}
-	button.addEventListener('click', function() {
-		window.scrollTo({ top: 0, behavior: 'smooth' });
-	});
-	downButton.addEventListener('click', function() {
-		window.scrollBy({ top: window.innerHeight * 0.85, behavior: 'smooth' });
-	});
-	window.addEventListener('scroll', updateScroller, { passive: true });
-	window.addEventListener('load', updateScroller);
-	updateScroller();
-})();
-</script>
 </body>
 </html>

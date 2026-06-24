@@ -53,6 +53,7 @@ class SignUpForm(forms.Form):
                 {
                     "placeholder": placeholders.get(name, ""),
                     "class": "auth-input",
+                    "autocomplete": "new-password" if name == "password" else "on",
                 }
             )
 
@@ -63,5 +64,9 @@ class LoginForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["email"].widget.attrs.update({"placeholder": "Enter your email", "class": "auth-input"})
-        self.fields["password"].widget.attrs.update({"placeholder": "Enter your password", "class": "auth-input"})
+        self.fields["email"].widget.attrs.update(
+            {"placeholder": "Enter your email", "class": "auth-input", "autocomplete": "email"}
+        )
+        self.fields["password"].widget.attrs.update(
+            {"placeholder": "Enter your password", "class": "auth-input", "autocomplete": "current-password"}
+        )
