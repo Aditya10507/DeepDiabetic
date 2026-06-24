@@ -129,7 +129,6 @@ env.bak/
 venv.bak/
 
 # Docker
-.dockerignore
 docker-compose.yml
 
 # Project specific
