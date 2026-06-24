@@ -500,6 +500,79 @@ p {
 	max-width: 720px;
 }
 
+.sample-panel {
+	margin-top: 22px;
+	padding: 22px;
+	border: 1px solid #d8e4e8;
+	border-radius: 8px;
+	background: #f7fafb;
+}
+
+.sample-panel-heading {
+	max-width: 760px;
+	margin-bottom: 18px;
+}
+
+.sample-panel-heading h2 {
+	margin-bottom: 8px;
+	font-size: clamp(1.35rem, 2vw, 1.8rem);
+}
+
+.sample-grid {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 14px;
+}
+
+.sample-card {
+	display: grid;
+	gap: 12px;
+	padding: 12px;
+	border: 1px solid #d4e0e4;
+	border-radius: 8px;
+	background: #ffffff;
+}
+
+.sample-card img {
+	width: 100%;
+	aspect-ratio: 1 / 1;
+	object-fit: cover;
+	border-radius: 6px;
+	border: 1px solid #dbe4e8;
+	background: #101820;
+}
+
+.sample-card h3 {
+	margin-bottom: 4px;
+	font-size: 1rem;
+	color: #17222b;
+}
+
+.sample-card p {
+	min-height: 44px;
+	color: #5d6b75;
+	font-size: 0.9rem;
+}
+
+.demo-notice {
+	margin-bottom: 18px;
+	padding: 16px;
+	border: 1px solid #c7dde3;
+	border-radius: 8px;
+	background: #f2fafb;
+	color: #24333b;
+}
+
+.demo-notice strong {
+	display: block;
+	margin-bottom: 6px;
+	color: #12333e;
+}
+
+.sample-help {
+	margin-top: 18px;
+}
+
 .result-layout {
 	display: grid;
 	grid-template-columns: 0.9fr 1.1fr;
@@ -645,7 +718,8 @@ p {
 	.landing-feature-grid,
 	.form-grid,
 	.dashboard-grid,
-	.stats-grid {
+	.stats-grid,
+	.sample-grid {
 		grid-template-columns: 1fr;
 	}
 

@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
-<link rel="stylesheet" type="text/css" href="{% static 'style.css' %}?v=20260624b"/>
+<link rel="stylesheet" type="text/css" href="{% static 'style.css' %}?v=20260624c"/>
 <link rel="icon" href="{% static '0.jpg' %}" />
 </head>
 <body class="app-body">
@@ -53,6 +53,27 @@
 			<p class="field-help">Use a clear retina image. After upload, the system will continue to the result screen automatically.</p>
 			<button class="primary-button" type="submit">Run Prediction</button>
 		</form>
+		<div class="sample-panel">
+			<div class="sample-panel-heading">
+				<p class="eyebrow">Recruiter demo</p>
+				<h2>Test with bundled retina samples</h2>
+				<p class="hero-text">These images are included in the deployment so reviewers can run the model without downloading the full training dataset.</p>
+			</div>
+			<div class="sample-grid">
+				{% for sample in demo_images %}
+				<form class="sample-card" method="post" action="{% url 'PredictAction' %}">
+					{% csrf_token %}
+					<input type="hidden" name="sample_image" value="{{ sample.id }}" />
+					<img src="{{ sample.url }}" alt="{{ sample.name }}" />
+					<div>
+						<h3>{{ sample.name }}</h3>
+						<p>{{ sample.description }}</p>
+					</div>
+					<button class="secondary-button" type="submit">Use sample</button>
+				</form>
+				{% endfor %}
+			</div>
+		</div>
 	</div>
 </div>
 </body>

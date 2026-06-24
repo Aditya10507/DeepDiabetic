@@ -28,9 +28,20 @@ _dataset_cache = {
     "y_train": None,
     "y_test": None,
 }
+_ml_dependencies_cache = None
+_prediction_model_cache = {
+    "path": None,
+    "model": None,
+    "inference_size": None,
+    "variant": None,
+}
 
 
 def _load_ml_dependencies():
+    global _ml_dependencies_cache
+    if _ml_dependencies_cache is not None:
+        return _ml_dependencies_cache
+
     import cv2
     import matplotlib
 
@@ -48,7 +59,7 @@ def _load_ml_dependencies():
     from tensorflow.keras.models import load_model
     from tensorflow.keras.utils import to_categorical
 
-    return {
+    _ml_dependencies_cache = {
         "cv2": cv2,
         "plt": plt,
         "sns": sns,
@@ -62,6 +73,47 @@ def _load_ml_dependencies():
         "load_model": load_model,
         "to_categorical": to_categorical,
     }
+    return _ml_dependencies_cache
+
+
+def load_prediction_model(ml, labels):
+    if os.path.exists(EFFICIENT_WEIGHTS_PATH):
+        model_path = EFFICIENT_WEIGHTS_PATH
+        inference_size = IMAGE_SIZE
+        model_variant = "224x224 enhanced model"
+    elif os.path.exists(LEGACY_EFFICIENT_WEIGHTS_PATH):
+        model_path = LEGACY_EFFICIENT_WEIGHTS_PATH
+        inference_size = (32, 32)
+        model_variant = "32x32 legacy fallback model"
+    else:
+        return None, None, None
+
+    if (
+        _prediction_model_cache["model"] is not None
+        and _prediction_model_cache["path"] == model_path
+        and _prediction_model_cache["inference_size"] == inference_size
+    ):
+        return (
+            _prediction_model_cache["model"],
+            _prediction_model_cache["inference_size"],
+            _prediction_model_cache["variant"],
+        )
+
+    try:
+        model = ml["load_model"](model_path)
+    except Exception:
+        model = build_classifier((inference_size[0], inference_size[1], 3), len(labels))
+        model.load_weights(model_path)
+
+    _prediction_model_cache.update(
+        {
+            "path": model_path,
+            "model": model,
+            "inference_size": inference_size,
+            "variant": model_variant,
+        }
+    )
+    return model, inference_size, model_variant
 
 DISEASE_DETAILS = {
     "Cataract": {
@@ -359,22 +411,8 @@ def predict_uploaded_image(file_path):
         cv2 = ml["cv2"]
         plt = ml["plt"]
         labels = load_labels()
-        model = None
-        inference_size = IMAGE_SIZE
-        model_variant = "224x224 enhanced model"
-
-        if os.path.exists(EFFICIENT_WEIGHTS_PATH):
-            try:
-                model = ml["load_model"](EFFICIENT_WEIGHTS_PATH)
-            except Exception:
-                model = build_classifier((IMAGE_SIZE[0], IMAGE_SIZE[1], 3), len(labels))
-                model.load_weights(EFFICIENT_WEIGHTS_PATH)
-        elif os.path.exists(LEGACY_EFFICIENT_WEIGHTS_PATH):
-            inference_size = (32, 32)
-            model_variant = "32x32 legacy fallback model"
-            model = build_classifier((32, 32, 3), len(labels))
-            model.load_weights(LEGACY_EFFICIENT_WEIGHTS_PATH)
-        else:
+        model, inference_size, model_variant = load_prediction_model(ml, labels)
+        if model is None:
             return None, None, "No trained model weights are available yet. Train a model first to test prediction."
 
         image = cv2.imread(file_path)

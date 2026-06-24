@@ -5,10 +5,20 @@ from django.contrib.auth import login
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.templatetags.static import static
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.http import JsonResponse
 
+from .app_config import DEFAULT_LABELS
+from .app_config import DATA_PATH
+from .app_config import DATASET_DIR
+from .app_config import IMAGE_SIZE
+from .app_config import LEGACY_EFFICIENT_WEIGHTS_PATH
+from .app_config import LEGACY_METRIC_PATH
+from .app_config import STATIC_DIR
+from .app_config import X_PATH
+from .app_config import Y_PATH
 from .forms import LoginForm
 from .forms import SignUpForm
 from .ml_utils import build_metrics_plot
@@ -19,6 +29,78 @@ from .ml_utils import save_uploaded_image
 from .models import UserProfile
 
 logger = logging.getLogger(__name__)
+
+DEMO_IMAGES = [
+    {"id": "0.jpg", "name": "Sample retina 1", "description": "Low-contrast fundus image"},
+    {"id": "1.jpg", "name": "Sample retina 2", "description": "Clear optic disc and vessels"},
+    {"id": "4.jpeg", "name": "Sample retina 3", "description": "Macular lesion example"},
+    {"id": "7.jpg", "name": "Sample retina 4", "description": "Hazy retinal capture"},
+]
+
+
+def get_demo_images():
+    return [
+        {
+            **image,
+            "url": static(image["id"]),
+        }
+        for image in DEMO_IMAGES
+    ]
+
+
+def get_demo_image_path(image_id):
+    allowed_ids = {image["id"] for image in DEMO_IMAGES}
+    if image_id not in allowed_ids:
+        return None
+    image_path = os.path.abspath(os.path.join(STATIC_DIR, image_id))
+    static_path = os.path.abspath(STATIC_DIR)
+    if os.path.commonpath([static_path, image_path]) != static_path:
+        return None
+    if not os.path.exists(image_path):
+        return None
+    return image_path
+
+
+def prediction_page_context(message=None):
+    context = {
+        "dashboard_mode": True,
+        "welcome_title": "Prediction workflow",
+        "welcome_text": "Upload a retina image or use a bundled sample to test the model.",
+        "demo_images": get_demo_images(),
+    }
+    if message:
+        context["data"] = message
+    return context
+
+
+def training_data_available():
+    return (
+        os.path.exists(DATA_PATH)
+        or (os.path.exists(X_PATH) and os.path.exists(Y_PATH))
+        or os.path.exists(DATASET_DIR)
+    )
+
+
+def build_recruiter_demo_summary():
+    model_status = "Available" if os.path.exists(LEGACY_EFFICIENT_WEIGHTS_PATH) else "Missing"
+    metrics_status = "Available" if os.path.exists(LEGACY_METRIC_PATH) else "Missing"
+    return (
+        "<div class='demo-notice'>"
+        "<strong>Recruiter demo mode</strong>"
+        "<p>The full training image corpus is not bundled in the free Hugging Face deployment because it is large. "
+        "The trained model weights and sample retina images are included, so reviewers can test inference from "
+        "the Predict Disease screen immediately.</p>"
+        "</div>"
+        "<div class='stats-grid'>"
+        f"<div class='stat-box'><span>Supported classes</span><strong>{len(DEFAULT_LABELS)}</strong></div>"
+        f"<div class='stat-box'><span>Input image size</span><strong>{IMAGE_SIZE[0]}x{IMAGE_SIZE[1]}</strong></div>"
+        f"<div class='stat-box'><span>Inference model</span><strong>{model_status}</strong></div>"
+        f"<div class='stat-box'><span>Saved metrics</span><strong>{metrics_status}</strong></div>"
+        "</div>"
+        "<div class='sample-help'>"
+        "<a class='primary-button' href='/Predict'>Test bundled sample images</a>"
+        "</div>"
+    )
 
 def health_check(request):
     return JsonResponse({'status': 'ok', 'build': os.environ.get('BUILD_VERSION', 'local')})
@@ -188,15 +270,7 @@ def LogoutUser(request):
 
 @login_required
 def Predict(request):
-    return render(
-        request,
-        "Predict.html",
-        {
-            "dashboard_mode": True,
-            "welcome_title": "Prediction workflow",
-            "welcome_text": "Upload a retina image to classify the likely eye disease category.",
-        },
-    )
+    return render(request, "Predict.html", prediction_page_context())
 
 
 @login_required
@@ -206,46 +280,30 @@ def PredictAction(request):
 
     logger.info(f"Prediction requested by user: {request.user.username}")
     upload = request.FILES.get("t1")
-    if upload is None:
-        return render(
-            request,
-            "Predict.html",
-            {
-                "data": "Please choose a retina image before running prediction.",
-                "dashboard_mode": True,
-                "welcome_title": "Prediction workflow",
-                "welcome_text": "Upload a retina image to classify the likely eye disease category.",
-            },
-        )
+    sample_image = request.POST.get("sample_image", "").strip()
 
-    try:
-        file_path = save_uploaded_image(upload)
-    except (IOError, ValueError) as exc:
-        logger.error(f"Prediction upload failed for user {request.user.username}: {exc}")
-        return render(
-            request,
-            "Predict.html",
-            {
-                "data": str(exc),
-                "dashboard_mode": True,
-                "welcome_title": "Prediction workflow",
-                "welcome_text": "Upload a retina image to classify the likely eye disease category.",
-            },
-        )
+    if sample_image:
+        file_path = get_demo_image_path(sample_image)
+        if file_path is None:
+            return render(request, "Predict.html", prediction_page_context("Please choose a valid sample image."))
+    else:
+        if upload is None:
+            return render(
+                request,
+                "Predict.html",
+                prediction_page_context("Please choose a retina image or run one of the bundled samples."),
+            )
+
+        try:
+            file_path = save_uploaded_image(upload)
+        except (IOError, ValueError) as exc:
+            logger.error(f"Prediction upload failed for user {request.user.username}: {exc}")
+            return render(request, "Predict.html", prediction_page_context(str(exc)))
 
     result, image_b64, error_message = predict_uploaded_image(file_path)
     if error_message:
         logger.error(f"Prediction failed for user {request.user.username}: {error_message}")
-        return render(
-            request,
-            "Predict.html",
-            {
-                "data": error_message,
-                "dashboard_mode": True,
-                "welcome_title": "Prediction workflow",
-                "welcome_text": "Upload a retina image to classify the likely eye disease category.",
-            },
-        )
+        return render(request, "Predict.html", prediction_page_context(error_message))
     
     logger.info(f"Prediction successful for user {request.user.username}: {result['prediction_text']}")
     context = {
@@ -261,6 +319,19 @@ def PredictAction(request):
 
 @login_required
 def ProcessData(request):
+    if not training_data_available():
+        output = build_recruiter_demo_summary()
+        return render(
+            request,
+            "UserScreen.html",
+            {
+                "dashboard_mode": True,
+                "welcome_title": "Processed dataset summary",
+                "welcome_text": "The public demo includes model inference assets without the full training corpus.",
+                "data": output,
+            },
+        )
+
     try:
         dataset = ensure_dataset_loaded()
         output = "<div class='stats-grid'>"
@@ -271,10 +342,7 @@ def ProcessData(request):
         output += "</div>"
     except RuntimeError as exc:
         logger.warning("Dataset processing unavailable: %s", exc)
-        output = (
-            "<div class='alert-box'>Dataset processing is unavailable on this deployment right now. "
-            "Upload the dataset and generated numpy files to enable preprocessing insights.</div>"
-        )
+        output = build_recruiter_demo_summary()
     return render(
         request,
         "UserScreen.html",
