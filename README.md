@@ -1,6 +1,5 @@
 ---
 title: DeepDiabetic
-emoji: D
 colorFrom: blue
 colorTo: green
 sdk: docker
