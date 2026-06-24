@@ -133,6 +133,7 @@ venv.bak/
 docker-compose.yml
 
 # Project specific
+.azure-cli/
 Dataset/
 model/*
 !model/efficient_weights.hdf5
